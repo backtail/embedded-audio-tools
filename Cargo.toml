@@ -1,0 +1,7 @@
+[package]
+name = "embedded-audio-tools"
+version = "0.1.0"
+edition = "2021"
+authors = ["backtail <mail@maxgenson.de>"]
+
+[dependencies]
