@@ -1,3 +1,5 @@
+use core::ops::Neg;
+
 use crate::memory::{
     MemSliceError::{self, *},
     MutMemoryPtr,
@@ -42,7 +44,24 @@ impl MutMemSlice {
 
     #[inline(always)]
     pub unsafe fn get_unchecked(&self, index: usize) -> f32 {
-        self.ptr.0.add(index).read()
+        self.ptr.0.add(index).read_volatile()
+    }
+
+    #[inline(always)]
+    pub fn get_wrapped(&self, index: isize) -> f32 {
+        if index as usize >= self.length {
+            return unsafe { self.get_unchecked(index as usize % self.length) };
+        }
+
+        if index < (self.length as isize).neg() {
+            return unsafe { self.get_unchecked(((index as isize).neg() as usize) % self.length) };
+        }
+
+        if index < 0 {
+            return unsafe { self.get_unchecked((index as isize).neg() as usize) };
+        }
+
+        unsafe { self.get_unchecked(index as usize) }
     }
 
     pub fn get(&self, index: usize) -> Result<f32, MemSliceError> {
@@ -55,7 +74,7 @@ impl MutMemSlice {
 
     #[inline(always)]
     pub unsafe fn assign_unchecked(&mut self, index: usize, value: f32) {
-        self.ptr.0.add(index).write(value);
+        self.ptr.0.add(index).write_volatile(value);
     }
 
     pub fn assign(&mut self, index: usize, value: f32) -> Result<(), MemSliceError> {

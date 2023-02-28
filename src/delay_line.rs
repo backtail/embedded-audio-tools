@@ -18,6 +18,10 @@ impl DelayLine {
         unsafe { self.buffer.get_unchecked(self.index) }
     }
 
+    pub fn read_wrapped_at(&self, offset: isize) -> f32 {
+        self.buffer.get_wrapped(self.index as isize + offset)
+    }
+
     pub fn write_and_advance(&mut self, value: f32) {
         unsafe {
             self.buffer.assign_unchecked(self.index, value);
@@ -37,7 +41,7 @@ mod tests {
     use crate::tools::mut_mem_slice::from_slice;
 
     #[test]
-    fn write() {
+    fn write_and_advance() {
         let mut buffer = [0_f32; 24];
 
         let mut delay_line = DelayLine::new(from_slice(&mut buffer[..]));
