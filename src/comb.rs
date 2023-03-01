@@ -48,7 +48,7 @@ impl Comb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tools::mut_mem_slice::from_slice;
+    use crate::mut_mem_slice::from_slice;
 
     #[test]
     fn basic_ticking() {
