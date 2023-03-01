@@ -1,9 +1,11 @@
-use core::ops::Neg;
-
+use crate::float::interpolation::lerp_unchecked;
 use crate::memory::{
     MemSliceError::{self, *},
     MutMemoryPtr,
 };
+
+#[allow(unused_imports)]
+use micromath::F32Ext;
 
 /// Raw slice pointer that implements the `Send` trait since it's only acting on static memory
 #[derive(Clone, Copy)]
@@ -48,17 +50,43 @@ impl MutMemSlice {
     }
 
     #[inline(always)]
+    pub unsafe fn lerp_unchecked(&self, index: f32) -> f32 {
+        let a = self.get_unchecked(index as usize);
+        let b = self.get_unchecked(index as usize + 1);
+
+        lerp_unchecked(a, b, index - (index as usize) as f32)
+    }
+
+    pub fn lerp(&self, index: f32) -> Result<f32, MemSliceError> {
+        if index < 0.0 {
+            return Err(IndexOutOfBound);
+        }
+
+        if index == (self.length - 1) as f32
+            && index < self.length as f32 - 1.0 + 10.0 * f32::EPSILON
+        {
+            return Ok(unsafe { self.get_unchecked(index as usize) });
+        }
+
+        let a = self.get(index as usize)?;
+        let b = self.get(index as usize + 1)?;
+
+        Ok(lerp_unchecked(a, b, index - (index as usize) as f32))
+    }
+
+    #[inline(always)]
+    pub fn lerp_wrapped(&self, index: f32) -> f32 {
+        let int_index = index.floor() as isize;
+        let a = self.get_wrapped(int_index);
+        let b = self.get_wrapped(int_index + 1);
+
+        lerp_unchecked(a, b, index - (int_index as f32))
+    }
+
+    #[inline(always)]
     pub fn get_wrapped(&self, index: isize) -> f32 {
-        if index as usize >= self.length {
-            return unsafe { self.get_unchecked(index as usize % self.length) };
-        }
-
-        if index < (self.length as isize).neg() {
-            return unsafe { self.get_unchecked(((index as isize).neg() as usize) % self.length) };
-        }
-
-        if index < 0 {
-            return unsafe { self.get_unchecked((index as isize).neg() as usize) };
+        if index >= self.length as isize || index < 0 {
+            return unsafe { self.get_unchecked(index.rem_euclid(self.length as isize) as usize) };
         }
 
         unsafe { self.get_unchecked(index as usize) }
@@ -91,7 +119,7 @@ impl MutMemSlice {
 
     /// Only use this on static memory!
     #[inline(always)]
-    pub unsafe fn set_slice(&mut self, ptr: *mut f32, length: usize) {
+    pub unsafe fn set_slice_unchecked(&mut self, ptr: *mut f32, length: usize) {
         self.ptr.0 = ptr;
         self.length = length;
     }
@@ -145,17 +173,89 @@ mod tests {
 
         let ptr_buffer = from_slice(&mut buffer[..]);
 
-        let index = 10;
-
-        let value = ptr_buffer.get(index).unwrap();
-        assert_eq!(value, buffer[index]);
-
-        let value = ptr_buffer.get(index + 1).unwrap();
-        assert_eq!(value, buffer[index + 1]);
-
-        let value = ptr_buffer.get(index + 2).unwrap();
-        assert_eq!(value, buffer[index + 2]);
-
+        assert_eq!(ptr_buffer.get(0), Ok(buffer[0]));
+        assert_eq!(ptr_buffer.get(5), Ok(buffer[5]));
         assert_eq!(ptr_buffer.get(ptr_buffer.length + 1), Err(IndexOutOfBound));
+    }
+
+    #[test]
+    fn get_value_wrapped() {
+        const SIZE: usize = 24;
+        let mut buffer = [0.0_f32; SIZE];
+        for (i, val) in buffer.iter_mut().enumerate() {
+            *val = i as f32;
+        }
+
+        let ptr_buffer = from_slice(&mut buffer[..]);
+
+        for i in 0..6 * SIZE {
+            let index = i as isize - (3 * SIZE) as isize;
+            let _ = ptr_buffer.get_wrapped(index);
+
+            assert_eq!(
+                ptr_buffer.get_wrapped(index),
+                (i % SIZE) as f32,
+                "at index: {}",
+                index
+            );
+        }
+    }
+
+    #[test]
+    fn unchecked_lerp() {
+        let mut buffer = [0.0_f32; 24];
+        for (i, val) in buffer.iter_mut().enumerate() {
+            *val = i as f32;
+        }
+
+        let ptr_buffer = from_slice(&mut buffer[..]);
+
+        assert_eq!(unsafe { ptr_buffer.lerp_unchecked(5.5) }, 5.5);
+    }
+
+    #[test]
+    fn checked_lerp() {
+        const SIZE: usize = 24;
+        let mut buffer = [0.0_f32; SIZE];
+        for (i, val) in buffer.iter_mut().enumerate() {
+            *val = i as f32;
+        }
+
+        let ptr_buffer = from_slice(&mut buffer[..]);
+
+        assert_eq!(ptr_buffer.lerp(-f32::EPSILON), Err(IndexOutOfBound));
+        assert_eq!(ptr_buffer.lerp(0.0), Ok(0.0));
+
+        let close_under = (SIZE - 1) as f32 - 10.0 * f32::EPSILON;
+        assert_ne!(close_under, (SIZE - 1) as f32);
+        assert_eq!(ptr_buffer.lerp(close_under), Ok(close_under));
+        assert_eq!(ptr_buffer.lerp((SIZE - 1) as f32), Ok((SIZE - 1) as f32));
+
+        assert_eq!(
+            ptr_buffer.lerp((SIZE - 1) as f32 + 9.0 * f32::EPSILON),
+            Err(IndexOutOfBound)
+        );
+    }
+
+    #[test]
+    fn lerp_wrapped() {
+        const SIZE: usize = 24;
+        let mut buffer = [0.0_f32; SIZE];
+        for (i, val) in buffer.iter_mut().enumerate() {
+            *val = i as f32;
+        }
+
+        let ptr_buffer = from_slice(&mut buffer[..]);
+
+        assert_eq!(ptr_buffer.lerp_wrapped(-1.0), (SIZE - 1) as f32);
+        assert_eq!(ptr_buffer.lerp_wrapped(-0.5), ((SIZE - 1) as f32) / 2.0);
+        assert_eq!(ptr_buffer.lerp_wrapped(0.0), 0.0);
+        assert_eq!(ptr_buffer.lerp_wrapped(0.5), 0.5);
+        assert_eq!(
+            ptr_buffer.lerp_wrapped(SIZE as f32 - 0.5),
+            ((SIZE - 1) as f32) / 2.0
+        );
+        assert_eq!(ptr_buffer.lerp_wrapped(SIZE as f32), 0.0);
+        assert_eq!(ptr_buffer.lerp_wrapped(SIZE as f32 + 0.5), 0.5);
     }
 }

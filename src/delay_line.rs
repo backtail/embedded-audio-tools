@@ -22,6 +22,10 @@ impl DelayLine {
         self.buffer.get_wrapped(self.index as isize + offset)
     }
 
+    pub fn read_lerp_wrapped_at(&self, offset: f32) -> f32 {
+        self.buffer.lerp_wrapped(self.index as f32 + offset)
+    }
+
     pub fn write_and_advance(&mut self, value: f32) {
         unsafe {
             self.buffer.assign_unchecked(self.index, value);
@@ -38,7 +42,7 @@ impl DelayLine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tools::mut_mem_slice::from_slice;
+    use crate::mut_mem_slice::from_slice;
 
     #[test]
     fn write_and_advance() {

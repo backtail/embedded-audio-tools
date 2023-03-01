@@ -14,6 +14,7 @@
 pub(crate) mod all_pass;
 pub(crate) mod comb;
 pub(crate) mod delay_line;
+pub(crate) mod float;
 pub(crate) mod memory;
 
 pub use all_pass::AllPass;
@@ -30,6 +31,11 @@ pub mod mem_slice {
     pub use crate::memory::mem_slice::from_slice;
 }
 
+pub mod interpolation {
+    pub use crate::float::interpolation::{lerp, lerp_unchecked};
+}
+
 pub mod errors {
+    pub use crate::float::interpolation::InterpolationError;
     pub use crate::memory::MemSliceError;
 }

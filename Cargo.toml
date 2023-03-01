@@ -5,3 +5,4 @@ edition = "2021"
 authors = ["backtail <mail@maxgenson.de>"]
 
 [dependencies]
+micromath = "2.0.0"
