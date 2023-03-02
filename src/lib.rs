@@ -8,6 +8,17 @@
 //! Creating `SubSlice`s of existing buffers is easy an can be either mutable or non-mutable. They also
 //! implement `Send` as long as the underlying buffer is considered static. When the size of a buffer is
 //! known at compile time, then can this crate handle the task.
+//!
+//! ### DSP building blocks
+//!
+//! This crate inlcudes basic compents to customize an audio effect:
+//!     - Delay line
+//!     - Comb filter
+//!     - Allpass filter
+//!
+//! ### Floats
+//!
+//! Interpolate or bitmanipulate audio streams or buffers.
 
 #![no_std]
 
@@ -20,6 +31,7 @@ pub(crate) mod memory;
 pub use all_pass::AllPass;
 pub use comb::Comb;
 pub use delay_line::DelayLine;
+pub use float::conversion::F32Components;
 pub use memory::mem_slice::MemSlice;
 pub use memory::mut_mem_slice::MutMemSlice;
 
@@ -35,7 +47,18 @@ pub mod interpolation {
     pub use crate::float::interpolation::{lerp, lerp_unchecked};
 }
 
+pub mod bit_manipulation {
+    pub use crate::float::bit_manipulation::{
+        bit_reduce, bit_reduce_exp, bit_reduce_exp_unchecked, bit_reduce_unchecked,
+    };
+}
+
 pub mod errors {
+    pub use crate::float::bit_manipulation::BitReductionError;
     pub use crate::float::interpolation::InterpolationError;
     pub use crate::memory::MemSliceError;
+}
+
+pub mod traits {
+    pub use crate::float::conversion::{FromF32Components, FromRaw, ToF32Components, ToRaw};
 }
