@@ -8,3 +8,14 @@ With `MemSlice` and `MutMemSlice` statically allocated buffers can easily and sa
 Creating `SubSlice`s of existing buffers is easy an can be either mutable or non-mutable. They also
 implement `Send` as long as the underlying buffer is considered static. When the size of a buffer is
 known at compile time, then can this crate handle the task.
+
+### DSP building blocks
+
+This crate inlcudes basic compents to customize an audio effect:
+    - Delay line
+    - Comb filter
+    - Allpass filter
+
+### Floats
+
+Interpolate or bitmanipulate audio streams or buffers.
