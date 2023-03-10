@@ -29,6 +29,7 @@ pub(crate) mod delay_line;
 pub(crate) mod float;
 pub(crate) mod memory;
 
+pub mod decibels;
 pub mod stereo;
 
 pub use all_pass::AllPass;
