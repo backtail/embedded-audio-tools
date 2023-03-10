@@ -23,12 +23,15 @@
 #![no_std]
 
 pub(crate) mod all_pass;
+pub(crate) mod biquad;
 pub(crate) mod comb;
 pub(crate) mod delay_line;
 pub(crate) mod float;
 pub(crate) mod memory;
 
-pub(crate) mod biquad;
+pub mod decibels;
+pub mod envelope;
+pub mod stereo;
 
 pub use all_pass::AllPass;
 pub use comb::Comb;
