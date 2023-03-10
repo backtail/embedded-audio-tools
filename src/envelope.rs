@@ -12,7 +12,7 @@ enum EnvelopeState {
     Attack,
     Decay,
     Release,
-    Hold,
+    Sustain,
 }
 
 pub struct AudioRateADSR {
@@ -90,7 +90,7 @@ impl AudioRateADSR {
     pub fn tick(&mut self) -> f32 {
         match self.state {
             Idle => 0.0,
-            Hold => self.envelope_value,
+            Sustain => self.sustain,
             Attack => self.next_attack(),
             Decay => self.next_decay(),
             Release => self.next_release(),
@@ -105,13 +105,13 @@ impl AudioRateADSR {
             }
 
             // Retrigger
-            Decay | Hold | Release => self.state = Attack,
+            Decay | Sustain | Release => self.state = Attack,
         }
     }
 
     pub fn trigger_off(&mut self) {
         match self.state {
-            Attack | Decay | Hold => {
+            Attack | Decay | Sustain => {
                 self.state = Release;
                 self.release_val = self.envelope_value;
                 self.t = 0.0;
@@ -143,7 +143,7 @@ impl AudioRateADSR {
             ((1.0 - self.t.powf(self.slope)) * (1.0 - self.sustain)) + self.sustain;
 
         if self.envelope_value <= self.sustain {
-            self.state = Hold;
+            self.state = Sustain;
             self.envelope_value = self.sustain;
         }
 
@@ -233,13 +233,13 @@ mod tests {
 
         assert_eq!(adsr.state, Decay);
         assert!(adsr.tick() == adsr.sustain);
-        assert_eq!(adsr.state, Hold);
+        assert_eq!(adsr.state, Sustain);
 
         assert!(adsr.tick() == adsr.sustain);
-        assert_eq!(adsr.state, Hold);
+        assert_eq!(adsr.state, Sustain);
 
         assert!(adsr.tick() == adsr.sustain);
-        assert_eq!(adsr.state, Hold);
+        assert_eq!(adsr.state, Sustain);
 
         // =====================
         // TRANSITION TO RELEASE
