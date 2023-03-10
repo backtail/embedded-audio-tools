@@ -30,6 +30,7 @@ pub(crate) mod float;
 pub(crate) mod memory;
 
 pub mod decibels;
+pub mod envelope;
 pub mod stereo;
 
 pub use all_pass::AllPass;
