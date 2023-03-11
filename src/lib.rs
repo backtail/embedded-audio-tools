@@ -31,6 +31,7 @@ pub(crate) mod memory;
 
 pub mod decibels;
 pub mod envelope;
+pub mod oscillator;
 pub mod phase_accumulator;
 pub mod stereo;
 
