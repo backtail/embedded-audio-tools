@@ -7,3 +7,10 @@ authors = ["backtail <mail@maxgenson.de>"]
 [dependencies]
 micromath = "2.0.0"
 tock-registers = "0.8.1"
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+
+[[bench]]
+name = "interpolation"
+harness = false
