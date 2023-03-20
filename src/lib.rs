@@ -31,6 +31,8 @@ pub(crate) mod memory;
 
 pub mod decibels;
 pub mod envelope;
+pub mod oscillator;
+pub mod phase_accumulator;
 pub mod stereo;
 
 pub use all_pass::AllPass;
@@ -57,7 +59,9 @@ pub mod mem_slice {
 }
 
 pub mod interpolation {
-    pub use crate::float::interpolation::{lerp, lerp_unchecked};
+    pub use crate::float::interpolation::{
+        lagrange, lagrange_only_4_elements, lerp, lerp_unchecked,
+    };
 }
 
 pub mod bit_manipulation {

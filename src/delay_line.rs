@@ -26,6 +26,10 @@ impl DelayLine {
         self.buffer.lerp_wrapped(self.index as f32 + offset)
     }
 
+    pub fn read_lagrange_wrapped_at(&self, offset: f32) -> f32 {
+        self.buffer.lagrange_wrapped(self.index as f32 + offset, 5)
+    }
+
     pub fn write_and_advance(&mut self, value: f32) {
         unsafe {
             self.buffer.assign_unchecked(self.index, value);

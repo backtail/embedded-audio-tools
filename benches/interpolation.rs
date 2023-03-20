@@ -1,4 +1,5 @@
-/// Raw slice pointer that implements the `Send` trait since it's only acting on static memory
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+
 #[derive(Debug, PartialEq)]
 pub enum InterpolationError {
     InputNaN,
@@ -6,11 +7,12 @@ pub enum InterpolationError {
     InterpolationRange,
 }
 
-#[inline(always)]
+#[inline(never)]
 pub fn lerp_unchecked(a: f32, b: f32, interpolate: f32) -> f32 {
     (a * (1.0 - interpolate)) + (b * interpolate)
 }
 
+#[inline(never)]
 pub fn lerp(a: f32, b: f32, interpolate: f32) -> Result<f32, InterpolationError> {
     if a.is_nan() || b.is_nan() {
         return Err(InterpolationError::InputNaN);
@@ -24,13 +26,15 @@ pub fn lerp(a: f32, b: f32, interpolate: f32) -> Result<f32, InterpolationError>
         return Err(InterpolationError::InterpolationRange);
     }
 
-    Ok(lerp_unchecked(a, b, interpolate))
+    Ok(lerp_unchecked(
+        a,
+        b,
+        (a * (1.0 - interpolate)) + (b * interpolate),
+    ))
 }
 
-/// Comuptes the lagrange interpolation on the whole set of data points provided.
+#[inline(never)]
 pub fn lagrange(array: &[f32], x_point: f32) -> f32 {
-    assert!(x_point <= (array.len() - 1) as f32);
-
     let mut y_point = 0.0_f32;
     for i in 0..array.len() {
         let mut term = array[i];
@@ -45,7 +49,7 @@ pub fn lagrange(array: &[f32], x_point: f32) -> f32 {
     return y_point;
 }
 
-#[inline(always)]
+#[inline(never)]
 pub unsafe fn lagrange_only_4_elements(array: &[f32], x_point: f32) -> f32 {
     let mut y_point = 0.0_f32;
 
@@ -80,24 +84,40 @@ pub unsafe fn lagrange_only_4_elements(array: &[f32], x_point: f32) -> f32 {
     return y_point;
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use InterpolationError::*;
+const POWER_OF_2: u32 = 4;
+const N_ELEMENTS: usize = 2_usize.pow(POWER_OF_2);
 
-    #[test]
-    fn interpolate_unchecked() {
-        assert_eq!(lerp_unchecked(0.0, 1.0, 0.5), 0.5);
+fn bench_math(c: &mut Criterion) {
+    let mut group = c.benchmark_group("Interpolation");
+
+    group.bench_function(BenchmarkId::new("Linear (no BC)", 0), |b| {
+        b.iter(|| lerp_unchecked(0.0, 0.0, 0.0))
+    });
+
+    group.bench_function(BenchmarkId::new("Linear (with BC)", 0), |b| {
+        b.iter(|| lerp(0.0, 0.0, 0.0))
+    });
+
+    for size in (1..=POWER_OF_2).map(|x: u32| 2_u32.pow(x) as usize) {
+        let slice = [0.0_f32; N_ELEMENTS];
+
+        if size == 4 {
+            group.bench_with_input(
+                BenchmarkId::new("Langrange (no BC)", size),
+                &size,
+                |b, &size| b.iter(|| unsafe { lagrange_only_4_elements(&slice[..size], 0.0) }),
+            );
+        }
+
+        group.bench_with_input(
+            BenchmarkId::new("Langrange (with BC)", size),
+            &size,
+            |b, &size| b.iter(|| lagrange(&slice[..size], 0.0)),
+        );
     }
 
-    #[test]
-    fn interpolate_checked() {
-        assert_eq!(lerp(f32::NAN, 0.0, 0.0), Err(InputNaN));
-        assert_eq!(lerp(0.0, f32::NAN, 0.0), Err(InputNaN));
-        assert_eq!(lerp(f32::INFINITY, 0.0, 0.0), Err(InputInfinite));
-        assert_eq!(lerp(0.0, f32::INFINITY, 0.0), Err(InputInfinite));
-        assert_eq!(lerp(0.0, 0.0, -1.0), Err(InterpolationRange));
-        assert_eq!(lerp(0.0, 0.0, 2.0), Err(InterpolationRange));
-        assert_eq!(lerp(0.0, 1.0, 0.5).unwrap(), 0.5);
-    }
+    group.finish();
 }
+
+criterion_group!(benches, bench_math);
+criterion_main!(benches);
