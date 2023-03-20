@@ -51,6 +51,12 @@ pub fn mono_pan_unchecked(amount: f32, sample: f32) -> (f32, f32) {
 }
 
 #[inline(always)]
+pub fn crossfade_correlated_unchecked(amount: f32, sample: (f32, f32)) -> f32 {
+    let pan = equal_amplitude_pan_unchecked(amount);
+    sample.0 * pan.0 + sample.1 * pan.1
+}
+
+#[inline(always)]
 fn equal_amplitude_pan_unchecked(amount: f32) -> (f32, f32) {
     ((1.0 - amount) * 0.5, (1.0 + amount) * 0.5)
 }
