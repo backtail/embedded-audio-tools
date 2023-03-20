@@ -59,7 +59,9 @@ pub mod mem_slice {
 }
 
 pub mod interpolation {
-    pub use crate::float::interpolation::{lerp, lerp_unchecked};
+    pub use crate::float::interpolation::{
+        lagrange, lagrange_only_4_elements, lerp, lerp_unchecked,
+    };
 }
 
 pub mod bit_manipulation {

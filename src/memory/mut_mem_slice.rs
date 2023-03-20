@@ -1,4 +1,6 @@
-use crate::float::interpolation::lerp_unchecked;
+use core::ops::Neg;
+
+use crate::float::interpolation::{lagrange, lagrange_only_4_elements, lerp_unchecked};
 use crate::memory::{
     MemSliceError::{self, *},
     MutMemoryPtr,
@@ -44,6 +46,58 @@ impl MutMemSlice {
         })
     }
 
+    pub fn lagrange_four_points_wrapped(&self, index: f32) -> f32 {
+        unsafe {
+            lagrange_only_4_elements(
+                &self.get_slice_of_four_wrapped(index.floor() as isize)[..],
+                index,
+            )
+        }
+    }
+
+    pub fn lagrange_wrapped(&self, index: f32, mut window_size: usize) -> f32 {
+        let int_index = index.floor() as isize;
+        let mut slice: [f32; 100] = [0.0_f32; 100];
+
+        if window_size > 100 {
+            window_size = 100;
+        }
+
+        let lower_bound = ((window_size / 2) as isize).neg() + 1;
+        let upper_bound = (window_size / 2) as isize;
+
+        for i in lower_bound..=upper_bound {
+            unsafe {
+                let wrapped_index = self.get_wrapped_unchecked(int_index + i);
+                slice[(i + lower_bound.neg()) as usize] = wrapped_index;
+            }
+        }
+
+        lagrange(&slice[..window_size], index - int_index as f32)
+    }
+
+    pub fn get_slice_of_four_wrapped(&self, index: isize) -> [f32; 4] {
+        if index + 3 >= self.length as isize || index < 0 {
+            unsafe {
+                [
+                    self.get_wrapped_unchecked(index + 0),
+                    self.get_wrapped_unchecked(index + 1),
+                    self.get_wrapped_unchecked(index + 2),
+                    self.get_wrapped_unchecked(index + 3),
+                ]
+            }
+        } else {
+            unsafe {
+                [
+                    self.get_unchecked((index + 0) as usize),
+                    self.get_unchecked((index + 1) as usize),
+                    self.get_unchecked((index + 2) as usize),
+                    self.get_unchecked((index + 3) as usize),
+                ]
+            }
+        }
+    }
+
     #[inline(always)]
     pub unsafe fn get_unchecked(&self, index: usize) -> f32 {
         self.ptr.0.add(index).read_volatile()
@@ -84,9 +138,14 @@ impl MutMemSlice {
     }
 
     #[inline(always)]
+    pub unsafe fn get_wrapped_unchecked(&self, index: isize) -> f32 {
+        self.get_unchecked(index.rem_euclid(self.length as isize) as usize)
+    }
+
+    #[inline(always)]
     pub fn get_wrapped(&self, index: isize) -> f32 {
         if index >= self.length as isize || index < 0 {
-            return unsafe { self.get_unchecked(index.rem_euclid(self.length as isize) as usize) };
+            return unsafe { self.get_wrapped_unchecked(index) };
         }
 
         unsafe { self.get_unchecked(index as usize) }
@@ -125,7 +184,7 @@ impl MutMemSlice {
     }
 
     #[inline(always)]
-    pub fn as_slice(&mut self) -> *mut [f32] {
+    pub fn as_slice(&self) -> *mut [f32] {
         core::ptr::slice_from_raw_parts_mut(self.ptr.0, self.length)
     }
 }
@@ -257,5 +316,14 @@ mod tests {
         );
         assert_eq!(ptr_buffer.lerp_wrapped(SIZE as f32), 0.0);
         assert_eq!(ptr_buffer.lerp_wrapped(SIZE as f32 + 0.5), 0.5);
+    }
+
+    #[test]
+    fn lagrange_wrapped() {
+        let mut buffer = [0.0_f32, -1.0, 1.0, 0.4];
+        let ptr_buffer = from_slice(&mut buffer[..]);
+        for i in -10..10 {
+            assert!(ptr_buffer.lagrange_wrapped(i as f32, 4).is_finite());
+        }
     }
 }
