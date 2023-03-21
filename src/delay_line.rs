@@ -40,7 +40,7 @@ impl DelayLine {
             self.buffer.assign_unchecked(self.index, value);
         }
 
-        if self.index == self.buffer.length - 1 {
+        if self.index == self.buffer.len() - 1 {
             self.index = 0;
         } else {
             self.index += 1;

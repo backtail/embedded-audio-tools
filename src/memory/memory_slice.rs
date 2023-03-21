@@ -39,15 +39,14 @@ unsafe {
     ptr_buffer.change_mut_slice_unchecked(buffer.as_mut_ptr(), buffer.len());
 }
 
-assert_eq!(ptr_buffer.ptr.0, mut_slice.ptr.0);
-assert_eq!(ptr_buffer.length, mut_slice.length);
+assert_eq!(ptr_buffer.as_slice(), mut_slice.as_slice());
 ```
 
 */
 #[derive(Clone, Copy)]
 pub struct MemorySlice<Mutability> {
-    pub ptr: Mutability,
-    pub length: usize,
+    ptr: Mutability,
+    length: usize,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -79,6 +78,17 @@ impl<Mutability: Default> Default for MemorySlice<Mutability> {
             ptr: Default::default(),
             length: 0,
         }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Functions independent of Mutability
+///////////////////////////////////////////////////////////////////////////////
+
+impl<Mutability> MemorySlice<Mutability> {
+    #[inline(always)]
+    pub fn len(&self) -> usize {
+        self.length
     }
 }
 
