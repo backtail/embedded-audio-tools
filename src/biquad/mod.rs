@@ -12,6 +12,23 @@ pub struct BiquadCoeffs<T> {
     state: PhantomData<T>,
 }
 
+/**
+Little suite of filters in a `Biquad` topology.
+
+### Example
+
+```rust
+use embedded_audio_tools::filter::{Biquad, BiquadCoeffs, Butterworth};
+
+let mut biquad: Biquad<Butterworth> = Biquad::new(BiquadCoeffs::new());
+
+// update coeffs for a lowpass
+biquad.coeffs.lowpass(1000.0, 1.0, 48_000.0); // Cutoff = 1kHz, Q = 1.0, fs = 48kHz
+
+// during audio callback
+biquad.process(1.0); // process a sample
+```
+*/
 pub struct Biquad<T> {
     z1: f32,
     z2: f32,

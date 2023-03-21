@@ -13,16 +13,14 @@ use micromath::F32Ext;
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
-Raw slice pointer that implements the `Send` trait since it's **only**
-works **safely** on **static memory**.
-
-Use default implemention to get the null pointer with length of zero and the
-respective mutabilty via the generic argument.
+Raw slice pointer that implements the `Send` trait since it **only**
+works **safely** on **statically allocated memory**.
 
 ## Example
 
 ```
-# use embedded_audio_tools::memory_access::*;
+use embedded_audio_tools::memory_access::*;
+
 // Thread-safe non-mutable slice
 let buffer = [0.0_f32; 24];
 let non_mut_slice = from_slice(&buffer[..]);
@@ -32,7 +30,7 @@ let mut buffer = [0.0_f32; 24];
 let mut mut_slice = from_slice_mut(&mut buffer[..]);
 
 // Null pointer and length of 0
-let mut ptr_buffer = MemorySlice::<Mutable>::default(); // or null();
+let mut ptr_buffer = null_mut();
 
 // Change associated buffer in runtime
 unsafe {
