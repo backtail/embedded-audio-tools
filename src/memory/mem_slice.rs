@@ -1,12 +1,12 @@
 use crate::memory::{
     MemSliceError::{self, *},
-    MemoryPtr,
+    NonMutable,
 };
 
 /// Raw slice pointer that implements the `Send` trait since it's only acting on static memory
 #[derive(Clone, Copy)]
 pub struct MemSlice {
-    pub ptr: MemoryPtr,
+    pub ptr: NonMutable,
     pub length: usize,
 }
 
@@ -16,7 +16,7 @@ impl MemSlice {
     #[inline(always)]
     pub fn null() -> MemSlice {
         MemSlice {
-            ptr: MemoryPtr(core::ptr::null()),
+            ptr: NonMutable(core::ptr::null()),
             length: 0,
         }
     }
@@ -35,7 +35,7 @@ impl MemSlice {
         }
 
         Ok(MemSlice {
-            ptr: unsafe { MemoryPtr(self.ptr.0.add(offset)) },
+            ptr: unsafe { NonMutable(self.ptr.0.add(offset)) },
             length: sub_length,
         })
     }
@@ -69,7 +69,7 @@ impl MemSlice {
 #[inline(always)]
 pub fn from_slice(slice: &[f32]) -> MemSlice {
     MemSlice {
-        ptr: MemoryPtr(slice.as_ptr()),
+        ptr: NonMutable(slice.as_ptr()),
         length: slice.len(),
     }
 }

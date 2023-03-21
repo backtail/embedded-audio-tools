@@ -3,7 +3,7 @@ use core::ops::Neg;
 use crate::float::interpolation::{lagrange, lagrange_only_4_elements, lerp_unchecked};
 use crate::memory::{
     MemSliceError::{self, *},
-    MutMemoryPtr,
+    Mutable,
 };
 
 #[allow(unused_imports)]
@@ -12,7 +12,7 @@ use micromath::F32Ext;
 /// Raw slice pointer that implements the `Send` trait since it's only acting on static memory
 #[derive(Clone, Copy)]
 pub struct MutMemSlice {
-    pub ptr: MutMemoryPtr,
+    pub ptr: Mutable,
     pub length: usize,
 }
 
@@ -22,7 +22,7 @@ impl MutMemSlice {
     #[inline(always)]
     pub fn null() -> MutMemSlice {
         MutMemSlice {
-            ptr: MutMemoryPtr(core::ptr::null_mut()),
+            ptr: Mutable(core::ptr::null_mut()),
             length: 0,
         }
     }
@@ -41,7 +41,7 @@ impl MutMemSlice {
         }
 
         Ok(MutMemSlice {
-            ptr: unsafe { MutMemoryPtr(self.ptr.0.add(offset)) },
+            ptr: unsafe { Mutable(self.ptr.0.add(offset)) },
             length: sub_length,
         })
     }
@@ -192,7 +192,7 @@ impl MutMemSlice {
 #[inline(always)]
 pub fn from_slice(slice: &mut [f32]) -> MutMemSlice {
     MutMemSlice {
-        ptr: MutMemoryPtr(slice.as_mut_ptr()),
+        ptr: Mutable(slice.as_mut_ptr()),
         length: slice.len(),
     }
 }

@@ -1,5 +1,8 @@
 pub mod mem_slice;
+pub mod memory_slice;
 pub mod mut_mem_slice;
+
+use crate::memory::memory_slice::{MutLocation, NonMutLocation};
 
 /// Describes all possible errors that can occur when handling static buffer manipulation
 #[derive(Debug, PartialEq)]
@@ -12,12 +15,65 @@ pub enum MemSliceError {
 ///
 /// Should always point at the beginning of your audio buffer in use
 #[derive(Clone, Copy)]
-pub struct MemoryPtr(pub *const f32);
-unsafe impl Send for MemoryPtr {}
+pub struct NonMutable(pub *const f32);
+unsafe impl Send for NonMutable {}
 
 /// Raw mutable pointer that implements the `Send` trait since it's only acting on static memory
 ///
 /// Should always point at the beginning of your audio buffer in use
 #[derive(Clone, Copy)]
-pub struct MutMemoryPtr(pub *mut f32);
-unsafe impl Send for MutMemoryPtr {}
+pub struct Mutable(pub *mut f32);
+unsafe impl Send for Mutable {}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Memory Pointer Trait Implemenations
+///////////////////////////////////////////////////////////////////////////////
+
+impl NonMutLocation for NonMutable {
+    type Output = NonMutable;
+    fn get(&self) -> *const f32 {
+        self.0
+    }
+    fn new(ptr: *const f32) -> Self::Output {
+        NonMutable(ptr)
+    }
+}
+
+impl NonMutLocation for Mutable {
+    type Output = Mutable;
+    fn get(&self) -> *const f32 {
+        *&self.0
+    }
+
+    fn new(ptr: *const f32) -> Self::Output {
+        Mutable(ptr.cast_mut())
+    }
+}
+
+impl MutLocation for Mutable {
+    type Output = Mutable;
+
+    fn get_mut(&mut self) -> *mut f32 {
+        self.0
+    }
+
+    fn new_mut(ptr: *mut f32) -> Self::Output {
+        Mutable(ptr)
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Common Trait Implementations
+///////////////////////////////////////////////////////////////////////////////
+
+impl Default for NonMutable {
+    fn default() -> Self {
+        NonMutable(core::ptr::null())
+    }
+}
+
+impl Default for Mutable {
+    fn default() -> Self {
+        Mutable(core::ptr::null_mut())
+    }
+}

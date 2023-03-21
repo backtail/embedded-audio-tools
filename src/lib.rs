@@ -50,6 +50,11 @@ pub mod filter {
     }
 }
 
+pub mod memory_access {
+    pub use crate::memory::memory_slice::{from_slice, from_slice_mut, MemorySlice};
+    pub use crate::memory::{Mutable, NonMutable};
+}
+
 pub mod mut_mem_slice {
     pub use crate::memory::mut_mem_slice::from_slice;
 }
