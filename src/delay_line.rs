@@ -1,17 +1,27 @@
 // Inspired by Ian Hobsen's ["irh <ian.r.hobson@gmail.com>"] freeverb for Rust
 // https://github.com/irh/freeverb-rs/blob/b877287cfaced4c2872f126b0f0e595abb87dbd0/src/freeverb/src/delay_line.rs
 
-use crate::memory::mut_mem_slice::MutMemSlice;
+use crate::memory::{memory_slice::MemorySlice, Mutable};
 
 #[derive(Clone, Copy)]
 pub struct DelayLine {
-    pub buffer: MutMemSlice,
+    buffer: MemorySlice<Mutable>,
     index: usize,
 }
 
 impl DelayLine {
-    pub fn new(buffer: MutMemSlice) -> Self {
+    pub fn new(buffer: MemorySlice<Mutable>) -> Self {
         Self { buffer, index: 0 }
+    }
+
+    #[inline(always)]
+    pub fn change_buffer(&mut self, new_slice: MemorySlice<Mutable>) {
+        self.buffer = new_slice;
+    }
+
+    #[inline(always)]
+    pub fn get_ptr_slice_mut(&mut self) -> *mut [f32] {
+        self.buffer.as_slice_mut()
     }
 
     pub fn read(&self) -> f32 {
@@ -35,7 +45,7 @@ impl DelayLine {
             self.buffer.assign_unchecked(self.index, value);
         }
 
-        if self.index == self.buffer.length - 1 {
+        if self.index == self.buffer.len() - 1 {
             self.index = 0;
         } else {
             self.index += 1;
@@ -46,13 +56,13 @@ impl DelayLine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mut_mem_slice::from_slice;
+    use crate::memory::memory_slice::from_slice_mut;
 
     #[test]
     fn write_and_advance() {
         let mut buffer = [0_f32; 24];
 
-        let mut delay_line = DelayLine::new(from_slice(&mut buffer[..]));
+        let mut delay_line = DelayLine::new(from_slice_mut(&mut buffer[..]));
 
         for (i, val) in buffer.iter().enumerate() {
             delay_line.write_and_advance(i as f32);
@@ -67,7 +77,7 @@ mod tests {
             *val = i as f32;
         }
 
-        let mut delay_line = DelayLine::new(from_slice(&mut buffer[..]));
+        let mut delay_line = DelayLine::new(from_slice_mut(&mut buffer[..]));
 
         for val in buffer {
             assert_eq!(val, delay_line.read());

@@ -2,11 +2,11 @@
 // https://github.com/irh/freeverb-rs/blob/b877287cfaced4c2872f126b0f0e595abb87dbd0/src/freeverb/src/comb.rs
 
 use crate::delay_line::DelayLine;
-use crate::memory::mut_mem_slice::MutMemSlice;
+use crate::memory::{memory_slice::MemorySlice, Mutable};
 
 #[derive(Clone, Copy)]
 pub struct Comb {
-    pub delay_line: DelayLine,
+    delay_line: DelayLine,
     feedback: f32,
     filter_state: f32,
     dampening: f32,
@@ -14,7 +14,7 @@ pub struct Comb {
 }
 
 impl Comb {
-    pub fn new(buffer: MutMemSlice) -> Self {
+    pub fn new(buffer: MemorySlice<Mutable>) -> Self {
         Self {
             delay_line: DelayLine::new(buffer),
             feedback: 0.5,
@@ -22,6 +22,15 @@ impl Comb {
             dampening: 0.5,
             dampening_inverse: 0.5,
         }
+    }
+
+    #[inline(always)]
+    pub fn change_buffer(&mut self, new_slice: MemorySlice<Mutable>) {
+        self.delay_line.change_buffer(new_slice);
+    }
+
+    pub fn get_ptr_slice_mut(&mut self) -> *mut [f32] {
+        self.delay_line.get_ptr_slice_mut()
     }
 
     pub fn set_dampening(&mut self, value: f32) {
@@ -48,12 +57,12 @@ impl Comb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mut_mem_slice::from_slice;
+    use crate::memory::memory_slice::from_slice_mut;
 
     #[test]
     fn basic_ticking() {
         let mut buffer = [0.0_f32; 2];
-        let mut comb = Comb::new(from_slice(&mut buffer[..]));
+        let mut comb = Comb::new(from_slice_mut(&mut buffer[..]));
         assert_eq!(comb.tick(1.0), 0.0);
         assert_eq!(comb.tick(0.0), 0.0);
         assert_eq!(comb.tick(0.0), 1.0);
