@@ -39,8 +39,6 @@ pub use all_pass::AllPass;
 pub use comb::Comb;
 pub use delay_line::DelayLine;
 pub use float::conversion::F32Components;
-pub use memory::mem_slice::MemSlice;
-pub use memory::mut_mem_slice::MutMemSlice;
 
 pub mod filter {
     pub use crate::biquad::{butterworth::Butterworth, Biquad, BiquadCoeffs};
@@ -53,14 +51,6 @@ pub mod filter {
 pub mod memory_access {
     pub use crate::memory::memory_slice::{from_slice, from_slice_mut, MemorySlice};
     pub use crate::memory::{Mutable, NonMutable};
-}
-
-pub mod mut_mem_slice {
-    pub use crate::memory::mut_mem_slice::from_slice;
-}
-
-pub mod mem_slice {
-    pub use crate::memory::mem_slice::from_slice;
 }
 
 pub mod interpolation {
