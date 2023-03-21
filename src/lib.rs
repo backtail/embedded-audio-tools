@@ -49,8 +49,9 @@ pub mod filter {
 }
 
 pub mod memory_access {
-    pub use crate::memory::memory_slice::{from_slice, from_slice_mut, MemorySlice};
-    pub use crate::memory::{Mutable, NonMutable};
+    pub use crate::memory::memory_slice::{
+        from_slice, from_slice_mut, null, null_mut, MemorySlice,
+    };
 }
 
 pub mod interpolation {

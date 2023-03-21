@@ -19,6 +19,11 @@ impl DelayLine {
         self.buffer = new_slice;
     }
 
+    #[inline(always)]
+    pub fn get_ptr_slice_mut(&mut self) -> *mut [f32] {
+        self.buffer.as_slice_mut()
+    }
+
     pub fn read(&self) -> f32 {
         unsafe { self.buffer.get_unchecked(self.index) }
     }

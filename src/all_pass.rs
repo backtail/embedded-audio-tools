@@ -21,6 +21,10 @@ impl AllPass {
         self.delay_line.change_buffer(new_slice);
     }
 
+    pub fn get_ptr_slice_mut(&mut self) -> *mut [f32] {
+        self.delay_line.get_ptr_slice_mut()
+    }
+
     pub fn tick(&mut self, input: f32) -> f32 {
         let delayed = self.delay_line.read();
         let output = -input + delayed;
