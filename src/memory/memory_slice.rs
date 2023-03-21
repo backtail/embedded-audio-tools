@@ -44,6 +44,7 @@ assert_eq!(ptr_buffer.length, mut_slice.length);
 ```
 
 */
+#[derive(Clone, Copy)]
 pub struct MemorySlice<Mutability> {
     pub ptr: Mutability,
     pub length: usize,
