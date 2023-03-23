@@ -8,6 +8,7 @@ pub trait MissingF32Ext {
     fn sinh(&self) -> Self::Output;
     fn cosh(&self) -> Self::Output;
     fn fast_tan(&self) -> Self::Output;
+    fn modulus(&self, n: Self::Output) -> Self::Output;
 }
 
 impl MissingF32Ext for f32 {
@@ -34,6 +35,10 @@ impl MissingF32Ext for f32 {
         // res += (21844.0 / 6081075.0) * self.powi(13);
         // res += (929569.0 / 638512875.0) * self.powi(15);
         res
+    }
+
+    fn modulus(&self, n: Self::Output) -> Self::Output {
+        (self % n + n) % n
     }
 }
 
