@@ -92,9 +92,11 @@ pub(crate) mod memory;
 
 pub mod decibels;
 pub mod envelope;
+pub mod lookup_tables;
 pub mod oscillator;
 pub mod phase_accumulator;
 pub mod stereo;
+pub mod wavetable;
 
 pub use all_pass::AllPass;
 pub use comb::Comb;

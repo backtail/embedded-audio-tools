@@ -7,6 +7,7 @@ pub trait PhaseAccumulator {
     fn set_freq_unchecked(&mut self, freq: f32);
     fn set_phase_shift(&mut self, shift: u32);
     fn next_value(&mut self) -> u32;
+    fn next_value_normalized(&mut self) -> f32;
 }
 
 impl PhaseAccumulator for SoftPhaseAccumulator {
@@ -35,10 +36,17 @@ impl PhaseAccumulator for SoftPhaseAccumulator {
     fn set_phase_shift(&mut self, shift: u32) {
         self.shift = shift;
     }
+
     #[inline(always)]
     fn next_value(&mut self) -> u32 {
         self.tick();
         self.counter.wrapping_add(self.shift)
+    }
+
+    #[inline(always)]
+    fn next_value_normalized(&mut self) -> f32 {
+        self.tick();
+        self.counter.wrapping_add(self.shift) as f32 / (u32::MAX as f32 + 1.0)
     }
 }
 
