@@ -1,5 +1,6 @@
 use core::{f32::consts::TAU, ops::Neg};
 
+use crate::lookup_tables::fixed_point_sin;
 use crate::{interpolation::lerp_unchecked, phase_accumulator::PhaseAccumulator};
 
 use Waveform::*;
@@ -41,26 +42,27 @@ impl<PA: PhaseAccumulator> UnipolarOscillator<PA> {
 
     #[inline(always)]
     fn next_saw(&mut self) -> f32 {
-        normalize_full_u32(self.acc.next_value())
+        normalize_full_u32(self.acc.next_value()) * 2.0 - 1.0
     }
 
     #[inline(always)]
     fn next_rect(&mut self) -> f32 {
-        (self.next_saw() * 2.0).floor()
+        ((self.next_saw() + 1.0).floor()) * 2.0 - 1.0
     }
 
     #[inline(always)]
     fn next_sine(&mut self) -> f32 {
-        scale_full_u32_to_f32(self.acc.next_value(), 0.0, TAU).sin() * 0.5 + 0.5
+        let phase = scale_full_u32_to_f32(self.acc.next_value(), 0.0, TAU);
+        fixed_point_sin(phase)
     }
 
     #[inline(always)]
     fn next_tri(&mut self) -> f32 {
-        let x = (self.next_saw() - 0.5) * 2.0;
+        let x = self.next_saw();
         if x.is_sign_positive() {
-            return 1.0 - x;
+            return (1.0 - x) * 2.0 - 1.0;
         } else {
-            return 1.0 - x.neg();
+            return (1.0 - x.neg()) * 2.0 - 1.0;
         }
     }
 
