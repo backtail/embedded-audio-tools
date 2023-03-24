@@ -1,4 +1,5 @@
-use core::f32::consts::{FRAC_PI_4, PI};
+use crate::{lookup::BANDLIMITED_RECT, memory::memory_slice::from_slice};
+use core::f32::consts::{FRAC_1_PI, FRAC_PI_4, PI};
 
 #[allow(unused_imports)]
 use micromath::F32Ext;
@@ -28,6 +29,40 @@ pub fn fixed_point_sin(val: f32) -> f32 {
     unsafe {
         sin_i16_unchecked((i16::MAX as f32 * quadrant_rads) as i16, 4) as f32 / i16::MAX as f32
     }
+}
+
+/// Accepts values between 0 and 1, otherwise clamps at boundery
+///
+/// Bandlimited rectable function
+pub fn lookup_rect(val: f32) -> f32 {
+    let buffer = from_slice(&BANDLIMITED_RECT[..]);
+    let len = buffer.len() - 1;
+
+    if val <= 0.0 {
+        return 0.0;
+    }
+
+    if val <= 0.25 {
+        let f_index = val * 4.0;
+        return unsafe { buffer.lerp_unchecked(f_index * len as f32) };
+    }
+
+    if val <= 0.5 {
+        let f_index = (0.25 - (val - 0.25)) * 4.0;
+        return unsafe { buffer.lerp_unchecked(f_index * len as f32) };
+    }
+
+    if val <= 0.75 {
+        let f_index = (val - 0.5) * 4.0;
+        return unsafe { -1.0 * buffer.lerp_unchecked(f_index * len as f32) };
+    }
+
+    if val < 1.0 {
+        let f_index = (0.25 - (val - 0.75)) * 4.0;
+        return unsafe { -1.0 * buffer.lerp_unchecked(f_index * len as f32) };
+    }
+
+    return 0.0;
 }
 
 /// Interpolated fixed point approximation lookup of the sine function
@@ -108,6 +143,36 @@ pub const unsafe fn sin_i16_unchecked(phase: i16, degree: u8) -> i16 {
     res as i16
 }
 
+pub fn simpsons_rule<const N: usize>(f: fn(f32) -> f32, a: f32, b: f32) -> f32 {
+    let h = (b - a) / (N as f32);
+    let mut x = [0.0; N];
+    for i in 0..N {
+        x[i] = a + (i as f32) * h;
+    }
+    let mut y = [0.0; N];
+    for i in 0..N {
+        y[i] = f(x[i]);
+    }
+    let integral = h / 3.0
+        * (f(a)
+            + 4.0 * y[1..N].iter().step_by(2).sum::<f32>()
+            + 2.0 * y[2..N - 1].iter().step_by(2).sum::<f32>()
+            + 4.0 * y[1..].iter().step_by(2).sum::<f32>()
+            + if N % 2 == 0 { f(b) } else { 0.0 });
+    integral
+}
+
+pub fn si(x: f32) -> f32 {
+    let f = |t: f32| -> f32 {
+        if t == 0.0 {
+            1.0
+        } else {
+            ((t * PI).sin() / t) * FRAC_1_PI
+        }
+    };
+    simpsons_rule::<1000>(f, 0.0, x)
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -130,12 +195,8 @@ mod tests {
     }
 
     #[test]
-    fn lookup_sin_bounds() {
-        assert_eq!(lookup_sin(0.0), 0.0);
-        // assert_eq!(lookup_sin(core::f32::consts::FRAC_PI_2), 1.0);
-        // assert_eq!(lookup_sin(core::f32::consts::PI), 0.0);
-        // assert_eq!(lookup_sin(core::f32::consts::TAU), 0.0);
-        // assert_eq!(lookup_sin(-core::f32::consts::PI), 0.0);
-        // assert_eq!(lookup_sin(-core::f32::consts::TAU), 0.0);
+    fn lookup_rect_bounds() {
+        assert_eq!(lookup_rect(0.0), 0.0);
+        assert_eq!(lookup_rect(1.0), 0.0);
     }
 }
