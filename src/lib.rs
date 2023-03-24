@@ -98,6 +98,8 @@ pub mod phase_accumulator;
 pub mod stereo;
 pub mod wavetable;
 
+mod lookup;
+
 pub use all_pass::AllPass;
 pub use comb::Comb;
 pub use delay_line::DelayLine;
