@@ -1,6 +1,6 @@
 use crate::{
     memory::{memory_slice::MemorySlice, NonMutable},
-    phase_accumulator::PhaseAccumulator,
+    oscillator::phase_accumulator::PhaseAccumulator,
 };
 
 pub struct WavetableOscillator<PA>

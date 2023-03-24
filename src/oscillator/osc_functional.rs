@@ -1,21 +1,16 @@
 use core::{f32::consts::TAU, ops::Neg};
 
-use crate::lookup_tables::fixed_point_sin;
-use crate::{interpolation::lerp_unchecked, phase_accumulator::PhaseAccumulator};
+use crate::{
+    float::{lerp_unchecked, AdditionalF32Ext},
+    oscillator::phase_accumulator::PhaseAccumulator,
+};
 
-use Waveform::*;
+use super::Waveform::{self, *};
 
 #[allow(unused_imports)]
 use micromath::F32Ext;
 
-pub enum Waveform {
-    Sine = 0,
-    Rectangle = 1,
-    Sawtooth = 2,
-    Triangle = 3,
-}
-
-pub struct UnipolarOscillator<PA>
+pub struct FunctionalOscillator<PA>
 where
     PA: PhaseAccumulator,
 {
@@ -23,9 +18,9 @@ where
     wave: Waveform,
 }
 
-impl<PA: PhaseAccumulator> UnipolarOscillator<PA> {
-    pub fn new(phase_accumulator: PA) -> UnipolarOscillator<PA> {
-        UnipolarOscillator {
+impl<PA: PhaseAccumulator> FunctionalOscillator<PA> {
+    pub fn new(phase_accumulator: PA) -> FunctionalOscillator<PA> {
+        FunctionalOscillator {
             acc: phase_accumulator,
             wave: Sine,
         }
@@ -42,7 +37,7 @@ impl<PA: PhaseAccumulator> UnipolarOscillator<PA> {
 
     #[inline(always)]
     fn next_saw(&mut self) -> f32 {
-        normalize_full_u32(self.acc.next_value()) * 2.0 - 1.0
+        self.acc.next_value_normalized() * 2.0 - 1.0
     }
 
     #[inline(always)]
@@ -52,8 +47,7 @@ impl<PA: PhaseAccumulator> UnipolarOscillator<PA> {
 
     #[inline(always)]
     fn next_sine(&mut self) -> f32 {
-        let phase = scale_full_u32_to_f32(self.acc.next_value(), 0.0, TAU);
-        fixed_point_sin(phase)
+        lerp_unchecked(0.0, TAU, self.acc.next_value_normalized()).fixed_point_sin()
     }
 
     #[inline(always)]
@@ -87,20 +81,10 @@ impl<PA: PhaseAccumulator> UnipolarOscillator<PA> {
     }
 }
 
-#[inline(always)]
-fn normalize_full_u32(phase: u32) -> f32 {
-    phase as f32 / (u32::MAX as f32 + 1.0)
-}
-
-#[inline(always)]
-fn scale_full_u32_to_f32(phase: u32, min: f32, max: f32) -> f32 {
-    lerp_unchecked(min, max, normalize_full_u32(phase))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::phase_accumulator::SoftPhaseAccumulator;
+    use crate::oscillator::phase_accumulator::SoftPhaseAccumulator;
 
     const SR: f32 = 48_000.0;
     const FREQ: f32 = 1000.0;
@@ -108,7 +92,7 @@ mod tests {
 
     #[test]
     fn check_bounds_saw() {
-        let mut osc = UnipolarOscillator::new(SoftPhaseAccumulator::new(FREQ, SR));
+        let mut osc = FunctionalOscillator::new(SoftPhaseAccumulator::new(FREQ, SR));
 
         osc.set_wave(Sawtooth);
 
@@ -120,7 +104,7 @@ mod tests {
 
     #[test]
     fn check_bounds_rect() {
-        let mut osc = UnipolarOscillator::new(SoftPhaseAccumulator::new(FREQ, SR));
+        let mut osc = FunctionalOscillator::new(SoftPhaseAccumulator::new(FREQ, SR));
 
         osc.set_wave(Rectangle);
 
@@ -132,7 +116,7 @@ mod tests {
 
     #[test]
     fn check_bounds_sine() {
-        let mut osc = UnipolarOscillator::new(SoftPhaseAccumulator::new(FREQ, SR));
+        let mut osc = FunctionalOscillator::new(SoftPhaseAccumulator::new(FREQ, SR));
 
         osc.set_wave(Sine);
 
@@ -148,7 +132,7 @@ mod tests {
 
     #[test]
     fn check_bounds_tri() {
-        let mut osc = UnipolarOscillator::new(SoftPhaseAccumulator::new(FREQ, SR));
+        let mut osc = FunctionalOscillator::new(SoftPhaseAccumulator::new(FREQ, SR));
 
         osc.set_wave(Triangle);
 

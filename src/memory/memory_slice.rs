@@ -3,7 +3,7 @@ use core::ops::Neg;
 use super::{Mutable, NonMutable};
 use crate::memory::MemSliceError::{self, *};
 
-use crate::float::interpolation::{lagrange, lagrange_only_4_elements, lerp_unchecked};
+use crate::float::{lagrange, lagrange_only_4_elements, lerp_unchecked};
 
 #[allow(unused_imports)]
 use micromath::F32Ext;

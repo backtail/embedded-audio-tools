@@ -1,4 +1,4 @@
-use crate::float::math::MissingF32Ext;
+use crate::float::AdditionalF32Ext;
 
 use super::BiquadCoeffs;
 use core::{f32::consts::PI, marker::PhantomData, ops::Neg};
