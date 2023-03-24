@@ -86,24 +86,24 @@ Panning, balacing and crossfading
 pub(crate) mod all_pass;
 pub(crate) mod biquad;
 pub(crate) mod comb;
+pub(crate) mod decibels;
 pub(crate) mod delay_line;
-pub(crate) mod float;
+pub(crate) mod envelope;
 pub(crate) mod memory;
 
-pub mod decibels;
-pub mod envelope;
-pub mod lookup_tables;
+pub mod fixed_point;
+pub mod float;
 pub mod oscillator;
-pub mod phase_accumulator;
 pub mod stereo;
-pub mod wavetable;
-
-mod lookup;
 
 pub use all_pass::AllPass;
+pub use biquad::Biquad;
 pub use comb::Comb;
 pub use delay_line::DelayLine;
-pub use float::conversion::F32Components;
+pub use envelope::AudioRateADSR;
+pub use oscillator::{
+    FunctionalOscillator, PhaseAccumulator, SoftPhaseAccumulator, WavetableOscillator,
+};
 
 pub mod filter {
     pub use crate::biquad::{butterworth::Butterworth, Biquad, BiquadCoeffs};
@@ -119,24 +119,15 @@ pub mod memory_access {
     };
 }
 
-pub mod interpolation {
-    pub use crate::float::interpolation::{
-        lagrange, lagrange_only_4_elements, lerp, lerp_unchecked,
-    };
-}
-
-pub mod bit_manipulation {
-    pub use crate::float::bit_manipulation::{
-        bit_reduce, bit_reduce_exp, bit_reduce_exp_unchecked, bit_reduce_unchecked,
-    };
-}
-
 pub mod errors {
-    pub use crate::float::bit_manipulation::BitReductionError;
-    pub use crate::float::interpolation::InterpolationError;
+    pub use crate::float::BitReductionError;
+    pub use crate::float::InterpolationError;
     pub use crate::memory::MemSliceError;
+    pub use crate::oscillator::phase_accumulator::FrequencyError;
+    pub use crate::stereo::PanningError;
 }
 
-pub mod traits {
-    pub use crate::float::conversion::{FromF32Components, FromRaw, ToF32Components, ToRaw};
+pub mod convert {
+    pub use crate::decibels::Decibels;
+    pub use crate::float::{FromF32Components, FromRawBytes, ToF32Components, ToRawBytes};
 }

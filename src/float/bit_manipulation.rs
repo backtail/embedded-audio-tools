@@ -79,7 +79,7 @@ pub fn bit_reduce_exp(input: f32, bit_depth: u8) -> Result<f32, BitReductionErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::float::conversion::FromRaw;
+    use crate::convert::FromRawBytes;
     use core::f32::consts::PI;
 
     #[test]

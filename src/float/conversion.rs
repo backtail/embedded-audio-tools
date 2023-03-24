@@ -20,11 +20,11 @@ pub struct F32Components {
 // CONVERSION TRAITS
 // =================
 
-pub trait ToRaw {
+pub trait ToRawBytes {
     fn to_raw_word(&self) -> u32;
 }
 
-pub trait FromRaw {
+pub trait FromRawBytes {
     type Output;
     fn from_raw_word(val: u32) -> Self::Output;
 }
@@ -42,7 +42,7 @@ pub trait FromF32Components {
 // CONVERSION IMPLEMENTATIONS
 // ==========================
 
-impl ToRaw for f32 {
+impl ToRawBytes for f32 {
     #[inline(always)]
     fn to_raw_word(&self) -> u32 {
         let mut full_integer = 0_u32;
@@ -55,7 +55,7 @@ impl ToRaw for f32 {
     }
 }
 
-impl FromRaw for f32 {
+impl FromRawBytes for f32 {
     type Output = f32;
     fn from_raw_word(val: u32) -> Self::Output {
         f32::from_le_bytes(val.to_le_bytes())
