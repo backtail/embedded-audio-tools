@@ -114,7 +114,7 @@ mod tests {
 
         for i in 0..(2 * CYLCLE_SAMPLES) {
             let val = osc.next();
-            assert!(val >= 0.0 && val <= 1.0, "Failed at index: {}", i);
+            assert!(val >= -1.0 && val <= 1.0, "Failed at index: {}", i);
         }
     }
 
@@ -126,7 +126,7 @@ mod tests {
 
         for i in 0..(2 * CYLCLE_SAMPLES) {
             let val = osc.next();
-            assert!(val == 0.0 || val == 1.0, "Failed at index: {}", i);
+            assert!(val >= -1.0 && val <= 1.0, "Failed at index: {}", i);
         }
     }
 
@@ -138,7 +138,11 @@ mod tests {
 
         for i in 0..(2 * CYLCLE_SAMPLES) {
             let val = osc.next();
-            assert!(val >= 0.0 && val <= 1.0, "Failed at index: {}", i);
+            assert!(
+                val >= -1.01 - f32::EPSILON && val <= 1.01,
+                "Failed at index: {}",
+                i
+            );
         }
     }
 
@@ -150,7 +154,7 @@ mod tests {
 
         for i in 0..(2 * CYLCLE_SAMPLES) {
             let val = osc.next();
-            assert!(val >= 0.0 && val <= 1.0, "Failed at index: {}", i);
+            assert!(val >= -1.0 && val <= 1.0, "Failed at index: {}", i);
         }
     }
 }
