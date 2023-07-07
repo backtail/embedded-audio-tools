@@ -51,6 +51,10 @@ impl DelayLine {
             self.index += 1;
         }
     }
+
+    pub fn len(&self) -> usize {
+        self.buffer.len()
+    }
 }
 
 #[cfg(test)]
