@@ -85,6 +85,7 @@ Panning, balacing and crossfading
 
 pub(crate) mod all_pass;
 pub(crate) mod biquad;
+pub(crate) mod clipping;
 pub(crate) mod comb;
 pub(crate) mod decibels;
 pub(crate) mod delay_line;
@@ -100,7 +101,6 @@ pub use all_pass::AllPass;
 pub use biquad::Biquad;
 pub use comb::Comb;
 pub use delay_line::DelayLine;
-pub use envelope::AudioRateADSR;
 pub use oscillator::{
     FunctionalOscillator, PhaseAccumulator, SoftPhaseAccumulator, WavetableOscillator,
 };
@@ -117,6 +117,15 @@ pub mod memory_access {
     pub use crate::memory::memory_slice::{
         from_slice, from_slice_mut, null, null_mut, MemorySlice,
     };
+}
+
+pub mod envelopes {
+    pub use crate::envelope::AudioRateADSR;
+    pub use crate::envelope::EnvelopeState;
+}
+
+pub mod dynamics {
+    pub use crate::clipping::*;
 }
 
 pub mod errors {
