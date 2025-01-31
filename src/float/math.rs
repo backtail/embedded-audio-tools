@@ -33,6 +33,7 @@ pub trait AdditionalF32Ext {
     fn sinh(&self) -> Self::Output;
     fn cosh(&self) -> Self::Output;
     fn fast_tan(&self) -> Self::Output;
+    fn tanh(&self) -> Self::Output;
     fn lookup_sin(&self) -> Self::Output;
     fn lookup_bl_rect(&self) -> Self::Output;
     fn fixed_point_sin(&self) -> Self::Output;
@@ -94,6 +95,26 @@ impl AdditionalF32Ext for f32 {
         res += (21844.0 / 6081075.0) * self.powi(13);
         res += (929569.0 / 638512875.0) * self.powi(15);
         res
+    }
+
+    /// Taylor series expansion of tanh(x), where x = 0
+    ///
+    /// tanh(x) = sinh(x) / cosh(x)
+    /// where sinh(x) = (e^x - e^(-x)) / 2
+    /// and cosh(x) = (e^x + e^(-x)) / 2
+    fn tanh(&self) -> Self::Output {
+        fn exp_approx(x: f32) -> f32 {
+            1.0 + x + (x * x) / 2.0 // Simple approximation of e^x
+        }
+
+        // Calculate sinh(x) and cosh(x)
+        let exp_x = exp_approx(*self);
+        let exp_neg_x = exp_approx(self.neg());
+
+        let sinh_x = (exp_x - exp_neg_x) / 2.0;
+        let cosh_x = (exp_x + exp_neg_x) / 2.0;
+
+        sinh_x / cosh_x
     }
 
     /// Fixed point approximation of the sine function
