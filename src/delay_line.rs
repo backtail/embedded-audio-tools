@@ -52,6 +52,14 @@ impl DelayLine {
         }
     }
 
+    pub fn advance(&mut self) {
+        if self.index == self.buffer.len() - 1 {
+            self.index = 0;
+        } else {
+            self.index += 1;
+        }
+    }
+
     pub fn len(&self) -> usize {
         self.buffer.len()
     }
