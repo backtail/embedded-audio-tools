@@ -3,6 +3,7 @@
 
 use crate::memory::{memory_slice::MemorySlice, Mutable};
 
+#[repr(C)]
 #[derive(Clone, Copy)]
 pub struct DelayLine {
     buffer: MemorySlice<Mutable>,
