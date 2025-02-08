@@ -6,6 +6,7 @@ use core::{f32::consts::PI, marker::PhantomData, ops::Neg};
 #[allow(unused_imports)]
 use micromath::F32Ext;
 
+#[repr(C)]
 pub enum ButterworthType {
     Lowpass = 0,
     Highpass = 1,
