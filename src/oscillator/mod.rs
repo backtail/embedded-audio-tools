@@ -7,6 +7,7 @@ pub use osc_functional::FunctionalOscillator;
 pub use osc_wavetable::WavetableOscillator;
 pub use phase_accumulator::{PhaseAccumulator, SoftPhaseAccumulator};
 
+#[repr(C)]
 pub enum Waveform {
     Sine = 0,
     Rectangle = 1,

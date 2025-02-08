@@ -7,6 +7,7 @@ const SHORTEST_TIME_BASE: f32 = 0.5;
 const BIGGEST_SLOPE: f32 = 20.0;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
+#[repr(C)]
 pub enum EnvelopeState {
     Idle,
     Attack,
@@ -15,6 +16,7 @@ pub enum EnvelopeState {
     Sustain,
 }
 
+#[repr(C)]
 pub struct AudioRateADSR {
     attack: f32,
     decay: f32,
