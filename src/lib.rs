@@ -89,9 +89,10 @@ pub(crate) mod clipping;
 pub(crate) mod comb;
 pub(crate) mod decibels;
 pub(crate) mod delay_line;
-pub(crate) mod envelope;
 pub(crate) mod memory;
 
+pub mod dynamics;
+pub mod envelope;
 pub mod fixed_point;
 pub mod float;
 pub mod oscillator;
@@ -101,6 +102,8 @@ pub use all_pass::AllPass;
 pub use biquad::Biquad;
 pub use comb::Comb;
 pub use delay_line::DelayLine;
+pub use dynamics::ff_comp::FFCompressor;
+pub use micromath::F32Ext;
 pub use oscillator::{
     FunctionalOscillator, PhaseAccumulator, SoftPhaseAccumulator, WavetableOscillator,
 };
@@ -120,12 +123,7 @@ pub mod memory_access {
     pub use crate::memory::{Mutable, NonMutable};
 }
 
-pub mod envelopes {
-    pub use crate::envelope::AudioRateADSR;
-    pub use crate::envelope::EnvelopeState;
-}
-
-pub mod dynamics {
+pub mod non_linear {
     pub use crate::clipping::*;
 }
 
