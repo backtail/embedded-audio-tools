@@ -14,3 +14,6 @@ criterion = { version = "0.4", features = ["html_reports"] }
 [[bench]]
 name = "interpolation"
 harness = false
+
+[features]
+no_std = []

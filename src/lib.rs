@@ -81,7 +81,7 @@ It is based on a software phase accumulator which is implemented as a trait boun
 Panning, balacing and crossfading
 */
 
-#![no_std]
+#![cfg_attr(feature = "no_std", no_std)]
 
 pub(crate) mod all_pass;
 pub(crate) mod biquad;
