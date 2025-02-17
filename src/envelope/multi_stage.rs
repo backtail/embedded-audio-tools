@@ -21,9 +21,9 @@ pub struct MultiStageEnvelope<const STAGES: usize> {
     /// always between 0.0 and 1.0
     stage_begin_level: f32,
 
-    pub t: f32,
+    t: f32,
     envelope_value: f32,
-    pub current_stage: i8,
+    current_stage: i8,
     retrigger_stage: u8,
 }
 
@@ -86,8 +86,12 @@ impl<const STAGES: usize> MultiStageEnvelope<STAGES> {
     /// otherwise
     /// -1 is idle state
     /// -2 is hold state
-    pub fn get_stage(&mut self) -> i8 {
+    pub fn get_stage(&self) -> i8 {
         self.current_stage
+    }
+
+    pub fn get_current_env_val(&self) -> f32 {
+        self.envelope_value
     }
 
     pub fn set_retrigger_stage(&mut self, n: u8) {

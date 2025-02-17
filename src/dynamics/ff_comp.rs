@@ -1,10 +1,7 @@
 #[allow(unused_imports)]
 use micromath::F32Ext;
 
-use crate::envelope::MultiStageEnvelope;
-
-const ATTACK_PHASE: u8 = 0;
-const RELEASE_PHASE: u8 = 1;
+use crate::envelope::ar::{ARPhase, AttackRelease};
 
 /// Feed Forward Compressor with adjustable time slope parameters
 #[repr(C)]
@@ -16,45 +13,30 @@ pub struct FFCompressor {
     /// between 1.0 and upper bound
     makeup_gain: f32,
 
-    env: MultiStageEnvelope<3>,
+    env: AttackRelease,
 
     /// internal
     env_triggered: bool,
+    cv: f32,
 }
 
 impl FFCompressor {
-    pub fn new(threshold: f32, ratio: f32, makeup_gain: f32, sr: f32) -> Self {
+    pub fn new(threshold: f32, ratio: f32, makeup_gain: f32) -> Self {
         let mut comp = FFCompressor {
             threshold,
             ratio,
             makeup_gain,
-            env: MultiStageEnvelope::new(0.0),
+            env: AttackRelease::new(0.0),
             env_triggered: false,
+            cv: 1.0,
         };
 
-        comp.env
-            .set_all(ATTACK_PHASE as usize, 0.20, 0.0, -10.0, sr);
-        comp.env
-            .set_all(RELEASE_PHASE as usize, 0.20, 0.0, 10.0, sr);
-        comp.env.set_all(2, 0.001, 0.0, 0.0, sr);
+        // envelope
+        comp.env.set_level(ARPhase::ATTACK, 1.0);
+        comp.env.set_level(ARPhase::RELEASE, 1.0);
+        comp.env.reset(1.0);
 
         comp
-    }
-
-    fn trigger(&mut self) {
-        if !self.env_triggered {
-            self.env.set_retrigger_stage(ATTACK_PHASE);
-            self.env.trigger();
-            self.env_triggered = true;
-        }
-    }
-
-    fn release(&mut self) {
-        if self.env_triggered {
-            self.env.set_retrigger_stage(RELEASE_PHASE);
-            self.env.trigger();
-            self.env_triggered = false;
-        }
     }
 
     //
@@ -68,60 +50,46 @@ impl FFCompressor {
     //                        |----------------------|                        |
     //                                                                   MAKEUP GAIN
     pub fn tick(&mut self, input: f32) -> f32 {
-        let input_level = input.abs();
+        let rectified = input.abs();
+        let kneed = rectified / self.compute_gain(rectified);
+        self.cv = self.makeup_gain / self.level_detect(kneed);
 
-        // print!("abs: {:.7}, ", input_level);
+        input * self.cv
+    }
 
-        let gain_computer = if input_level > self.threshold {
-            self.trigger();
-            self.threshold + (input_level - self.threshold) / (self.ratio)
+    fn compute_gain(&mut self, input: f32) -> f32 {
+        if input > self.threshold {
+            // retrigger attack stage
+            self.env.trigger();
+            self.threshold + (input - self.threshold) / self.ratio
         } else {
-            self.release();
-            input_level
-        };
+            // retrigger release
+            self.env.release();
+            input
+        }
+    }
 
-        // print!("new: {:.7}, ", gain_computer);
-
-        let level_detector_in = input_level / gain_computer;
-        self.env
-            .set_level(ATTACK_PHASE as usize, level_detector_in - 1.0);
-
-        // print!("before_detector: {:.7}, ", level_detector_in);
-
-        // print!("stage: {:.7}, ", self.env.get_stage());
-
-        let level_detector_out = self.env.tick() + 1.0;
-
-        // print!("env: {:.7}, ", level_detector_out);
-
-        let control_voltage = self.makeup_gain / level_detector_out;
-
-        // print!("cv: {:.7}, ", control_voltage);
-
-        input * control_voltage
+    fn level_detect(&mut self, input: f32) -> f32 {
+        self.env.set_level(ARPhase::ATTACK, input);
+        self.env.tick().clamp(1.0, f32::MAX)
     }
 
     pub fn set_attack(&mut self, val: f32, sr: f32) {
         self.env
-            .set_time(ATTACK_PHASE as usize, val.clamp(f32::EPSILON, f32::MAX), sr);
+            .set_time(ARPhase::ATTACK, val.clamp(f32::EPSILON, f32::MAX), sr);
     }
 
     pub fn set_release(&mut self, val: f32, sr: f32) {
-        self.env.set_time(
-            RELEASE_PHASE as usize,
-            val.clamp(f32::EPSILON, f32::MAX),
-            sr,
-        );
+        self.env
+            .set_time(ARPhase::RELEASE, val.clamp(f32::EPSILON, f32::MAX), sr);
     }
 
     pub fn set_attack_slope(&mut self, val: f32) {
-        self.env
-            .set_slope(ATTACK_PHASE as usize, val.clamp(-10.0, 10.0));
+        self.env.set_slope(ARPhase::ATTACK, val.clamp(-10.0, 10.0));
     }
 
     pub fn set_release_slope(&mut self, val: f32) {
-        self.env
-            .set_slope(RELEASE_PHASE as usize, val.clamp(-10.0, 10.0));
+        self.env.set_slope(ARPhase::RELEASE, val.clamp(-10.0, 10.0));
     }
 
     pub fn set_threshold(&mut self, val: f32) {
@@ -129,7 +97,27 @@ impl FFCompressor {
     }
 
     pub fn set_ratio(&mut self, val: f32) {
-        self.ratio = val.clamp(1.0, 1000.0);
+        self.ratio = val.clamp(1.0, f32::MAX);
+    }
+
+    pub fn set_makeup_gain(&mut self, val: f32) {
+        self.makeup_gain = val.clamp(1.0, f32::MAX);
+    }
+
+    pub fn get_current_cv(&self) -> f32 {
+        self.cv
+    }
+
+    pub fn get_current_env_val(&self) -> f32 {
+        self.env.get_current_env_val()
+    }
+
+    pub fn get_current_threshold(&self) -> f32 {
+        self.threshold
+    }
+
+    pub fn get_current_env_stage(&self) -> i8 {
+        self.env.get_stage() as i8
     }
 }
 

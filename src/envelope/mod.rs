@@ -1,4 +1,5 @@
 pub mod adsr;
+pub mod ar;
 pub mod multi_stage;
 
 pub use adsr::*;
