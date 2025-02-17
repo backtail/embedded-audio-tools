@@ -10,6 +10,9 @@ tock-registers = "0.8.1"
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }
+textplots = "0.8.6"
+hound = "3.5.1"
+rgb = "0.8.27"
 
 [[bench]]
 name = "interpolation"
