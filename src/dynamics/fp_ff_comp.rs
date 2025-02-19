@@ -1,11 +1,11 @@
 #[allow(unused_imports)]
 use micromath::F32Ext;
 
-use crate::envelope::{ARPhase, AttackRelease};
+use crate::envelope::{ARPhase, FixedPointAttackRelease};
 
 /// Feed Forward Compressor with adjustable time slope parameters
 #[repr(C)]
-pub struct FFCompressor {
+pub struct FixedPointFFCompressor<const F_BITS: u8> {
     /// between 0.0 and 1.0
     threshold: f32,
     /// between 1.0 and +inf
@@ -13,26 +13,26 @@ pub struct FFCompressor {
     /// between 1.0 and upper bound
     makeup_gain: f32,
 
-    env: AttackRelease,
+    env: FixedPointAttackRelease<F_BITS>,
 
     /// internal
     cv: f32,
 }
 
-impl FFCompressor {
-    pub fn new(threshold: f32, ratio: f32, makeup_gain: f32) -> Self {
-        let mut comp = FFCompressor {
-            threshold,
-            ratio,
-            makeup_gain,
-            env: AttackRelease::new(0.0),
+impl<const F_BITS: u8> FixedPointFFCompressor<F_BITS> {
+    pub fn new() -> FixedPointFFCompressor<F_BITS> {
+        let mut comp = FixedPointFFCompressor {
+            threshold: 1.0,
+            ratio: 1.0,
+            makeup_gain: 1.0,
+            env: FixedPointAttackRelease::<F_BITS>::new(),
             cv: 1.0,
         };
 
         // envelope
-        comp.env.set_level(ARPhase::ATTACK, 1.0);
-        comp.env.set_level(ARPhase::RELEASE, 1.0);
-        comp.env.reset(1.0);
+        comp.env.set_level(ARPhase::ATTACK, one(F_BITS));
+        comp.env.set_level(ARPhase::RELEASE, one(F_BITS));
+        comp.env.reset(one(F_BITS));
 
         comp
     }
@@ -68,26 +68,39 @@ impl FFCompressor {
     }
 
     fn level_detect(&mut self, input: f32) -> f32 {
-        self.env.set_level(ARPhase::ATTACK, input);
-        self.env.tick().clamp(1.0, f32::MAX)
+        self.env
+            .set_level(ARPhase::ATTACK, (input * one(F_BITS) as f32) as i32);
+        self.env.tick().clamp(one(F_BITS), i32::MAX) as f32 / one(F_BITS) as f32
     }
 
     pub fn set_attack(&mut self, val: f32, sr: f32) {
-        self.env
-            .set_time(ARPhase::ATTACK, val.clamp(f32::EPSILON, f32::MAX), sr);
+        self.env.set_time(
+            ARPhase::ATTACK,
+            (val.clamp(f32::EPSILON, f32::MAX) * one(F_BITS) as f32) as i32,
+            sr as i32,
+        );
     }
 
     pub fn set_release(&mut self, val: f32, sr: f32) {
-        self.env
-            .set_time(ARPhase::RELEASE, val.clamp(f32::EPSILON, f32::MAX), sr);
+        self.env.set_time(
+            ARPhase::RELEASE,
+            (val.clamp(f32::EPSILON, f32::MAX) * one(F_BITS) as f32) as i32,
+            sr as i32,
+        );
     }
 
     pub fn set_attack_slope(&mut self, val: f32) {
-        self.env.set_slope(ARPhase::ATTACK, val.clamp(-10.0, 10.0));
+        self.env.set_slope(
+            ARPhase::ATTACK,
+            (val.clamp(-10.0, 10.0) * one(F_BITS) as f32) as i32,
+        );
     }
 
     pub fn set_release_slope(&mut self, val: f32) {
-        self.env.set_slope(ARPhase::RELEASE, val.clamp(-10.0, 10.0));
+        self.env.set_slope(
+            ARPhase::RELEASE,
+            (val.clamp(-10.0, 10.0) * one(F_BITS) as f32) as i32,
+        );
     }
 
     pub fn set_threshold(&mut self, val: f32) {
@@ -107,7 +120,7 @@ impl FFCompressor {
     }
 
     pub fn get_current_env_val(&self) -> f32 {
-        self.env.get_current_env_val()
+        self.env.get_current_env_val() as f32 / one(F_BITS) as f32
     }
 
     pub fn get_current_threshold(&self) -> f32 {
@@ -119,13 +132,18 @@ impl FFCompressor {
     }
 }
 
+#[inline(always)]
+const fn one(f_bits: u8) -> i32 {
+    1 << f_bits
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn okay() {
-        let mut comp = FFCompressor::new(0.2, 2.0, 1.0, 100.0);
+        let mut comp = FixedPointFFCompressor::new(0.2, 2.0, 1.0, 100.0);
 
         for i in 0..25 {
             let sample = if i < 5 || i > 15 { 0.0 } else { 1.0 };

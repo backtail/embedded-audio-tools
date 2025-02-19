@@ -1,16 +1,10 @@
+use super::ARPhase;
+
 #[allow(unused_imports)]
 use micromath::F32Ext;
 
 const BIGGEST_SLOPE: f32 = 10.0;
 const N_STAGES: usize = 2;
-
-#[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
-pub enum ARPhase {
-    HOLD = -1,
-    ATTACK = 0,
-    RELEASE = 1,
-}
 
 #[repr(C)]
 pub struct AttackRelease {
