@@ -48,8 +48,8 @@ fn main() {
         output_samples.push((sample.0, comp.tick(sample.1)));
     }
 
-    // let range = max_samples;
-    let range = 0.08;
+    let range = max_samples;
+    // let range = 0.08;
 
     Chart::new(320, 60, 0.0, range)
         .linecolorplot(

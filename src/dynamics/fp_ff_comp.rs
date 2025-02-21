@@ -77,7 +77,7 @@ impl<const F_BITS: u8> FixedPointFFCompressor<F_BITS> {
         self.env.set_time(
             ARPhase::ATTACK,
             (val.clamp(f32::EPSILON, f32::MAX) * one(F_BITS) as f32) as i32,
-            sr as i32,
+            (sr * one(F_BITS) as f32) as i32,
         );
     }
 
@@ -85,7 +85,7 @@ impl<const F_BITS: u8> FixedPointFFCompressor<F_BITS> {
         self.env.set_time(
             ARPhase::RELEASE,
             (val.clamp(f32::EPSILON, f32::MAX) * one(F_BITS) as f32) as i32,
-            sr as i32,
+            (sr * one(F_BITS) as f32) as i32,
         );
     }
 
