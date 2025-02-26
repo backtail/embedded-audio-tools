@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn okay() {
-        let mut comp = FFCompressor::new(0.2, 2.0, 1.0, 100.0);
+        let mut comp = FFCompressor::new(0.2, 2.0, 1.0);
 
         for i in 0..25 {
             let sample = if i < 5 || i > 15 { 0.0 } else { 1.0 };

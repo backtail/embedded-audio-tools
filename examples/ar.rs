@@ -1,4 +1,4 @@
-use embedded_audio_tools::envelope::ar::{ARPhase, AttackRelease};
+use embedded_audio_tools::envelope::{ar::AttackRelease, ARPhase};
 use rgb::RGB8;
 use textplots::{Chart, ColorPlot, Shape};
 
