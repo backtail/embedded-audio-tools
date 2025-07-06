@@ -6,8 +6,8 @@ use micromath::F32Ext;
 const SHORTEST_TIME_BASE: f32 = 0.5;
 const BIGGEST_SLOPE: f32 = 20.0;
 
-#[derive(Debug, PartialEq)]
-enum EnvelopeState {
+#[derive(Debug, PartialEq, Clone)]
+pub enum EnvelopeState {
     Idle,
     Attack,
     Decay,
@@ -118,6 +118,10 @@ impl AudioRateADSR {
             }
             _ => {}
         }
+    }
+
+    pub fn get_env_state(&self) -> EnvelopeState {
+        self.state.clone()
     }
 
     // =================

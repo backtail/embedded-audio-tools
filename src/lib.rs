@@ -90,6 +90,7 @@ pub(crate) mod decibels;
 pub(crate) mod delay_line;
 pub(crate) mod envelope;
 pub(crate) mod memory;
+pub(crate) mod rhythm;
 
 pub mod fixed_point;
 pub mod float;
@@ -100,7 +101,7 @@ pub use all_pass::AllPass;
 pub use biquad::Biquad;
 pub use comb::Comb;
 pub use delay_line::DelayLine;
-pub use envelope::AudioRateADSR;
+pub use envelope::{AudioRateADSR, EnvelopeState};
 pub use oscillator::{
     FunctionalOscillator, PhaseAccumulator, SoftPhaseAccumulator, WavetableOscillator,
 };
