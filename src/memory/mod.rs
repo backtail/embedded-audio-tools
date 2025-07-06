@@ -13,6 +13,7 @@ pub enum MemSliceError {
 ///
 /// Should always point at the beginning of your audio buffer in use
 #[derive(Clone, Copy)]
+#[repr(transparent)]
 pub struct NonMutable(*const f32);
 unsafe impl Send for NonMutable {}
 
@@ -20,6 +21,7 @@ unsafe impl Send for NonMutable {}
 ///
 /// Should always point at the beginning of your audio buffer in use
 #[derive(Clone, Copy)]
+#[repr(transparent)]
 pub struct Mutable(*mut f32);
 unsafe impl Send for Mutable {}
 

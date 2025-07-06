@@ -2,6 +2,7 @@ use core::marker::PhantomData;
 
 pub mod butterworth;
 
+#[repr(C)]
 pub struct BiquadCoeffs<T> {
     pub b0: f32,
     pub b1: f32,
@@ -29,6 +30,7 @@ biquad.coeffs.lowpass(1000.0, 1.0, 48_000.0); // Cutoff = 1kHz, Q = 1.0, fs = 48
 biquad.process(1.0); // process a sample
 ```
 */
+#[repr(C)]
 pub struct Biquad<T> {
     z1: f32,
     z2: f32,

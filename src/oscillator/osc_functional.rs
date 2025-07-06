@@ -10,6 +10,7 @@ use super::Waveform::{self, *};
 #[allow(unused_imports)]
 use micromath::F32Ext;
 
+#[repr(C)]
 pub struct FunctionalOscillator<PA>
 where
     PA: PhaseAccumulator,

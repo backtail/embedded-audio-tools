@@ -5,6 +5,7 @@ use crate::delay_line::DelayLine;
 use crate::memory::{memory_slice::MemorySlice, Mutable};
 
 #[derive(Clone, Copy)]
+#[repr(C)]
 pub struct AllPass {
     delay_line: DelayLine,
 }

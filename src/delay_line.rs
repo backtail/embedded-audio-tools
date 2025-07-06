@@ -3,6 +3,7 @@
 
 use crate::memory::{memory_slice::MemorySlice, Mutable};
 
+#[repr(C)]
 #[derive(Clone, Copy)]
 pub struct DelayLine {
     buffer: MemorySlice<Mutable>,
@@ -45,6 +46,14 @@ impl DelayLine {
             self.buffer.assign_unchecked(self.index, value);
         }
 
+        if self.index == self.buffer.len() - 1 {
+            self.index = 0;
+        } else {
+            self.index += 1;
+        }
+    }
+
+    pub fn advance(&mut self) {
         if self.index == self.buffer.len() - 1 {
             self.index = 0;
         } else {

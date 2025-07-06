@@ -50,6 +50,7 @@ impl PhaseAccumulator for SoftPhaseAccumulator {
     }
 }
 
+#[repr(C)]
 pub struct SoftPhaseAccumulator {
     counter: u32,
     freq: f32,
